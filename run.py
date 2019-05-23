@@ -50,9 +50,8 @@ class RunKGText(object):
         print("\t%i testing facts" %(num_test))
         
         if self.strategy is not None:
-            google_vecs = gensim.models.KeyedVectors.load_word2vec_format('data/GoogleNews-vectors-negative300.bin', binary=True)
-            self.word_ids_names, self.word_init_names, self.W_text = self._build_text_data(self.name_vocab, self.entity2name, google_vecs)
-            self.word_ids_desc, self.word_init_desc, _ = self._build_text_data(self.desc_vocab, self.entity2desc, google_vecs)           
+            self.word_ids_names, self.word_init_names, self.W_text = self._build_text_data(self.name_vocab, self.entity2name)
+            self.word_ids_desc, self.word_init_desc, _ = self._build_text_data(self.desc_vocab, self.entity2desc)           
 
             if self.strategy == "WV-names":
                 print("\t%i words" %(len(self.name_vocab)))
@@ -107,6 +106,8 @@ class RunKGText(object):
         self.desc_vocab = set([])
         self.entity2name = {}
         self.entity2desc = {} 
+        
+        self.google_vecs = gensim.models.KeyedVectors.load_word2vec_format('data/GoogleNews-vectors-negative300.bin', binary=True)
 
         if dataset == "WN":
             fname = os.path.join("data","WN18","descriptions.txt")
@@ -137,13 +138,19 @@ class RunKGText(object):
                     continue
                 else:
                     desc = preprocess(desc)
+                    if dataset == "FB":
+                        # Small optimization: since the description vocabulary for Freebase is very large, 
+                        # filter out the words that don't appear in the Google News vectors. These words 
+                        # are mostly proper nouns and non-English words which don't help performance, but 
+                        # reducing the vocabulary speeds up the training and testing. 
+                        desc = [word for word in desc if word in self.google_vecs] 
                     self.desc_vocab = self.desc_vocab.union(set(desc))
 
                 self.entity2desc[entity] = desc 
                 self.entity2name[entity] = name             
 
 
-    def _build_text_data(self, vocab, entity2text, google_vecs): 
+    def _build_text_data(self, vocab, entity2text): 
         '''
         Build data structures needed for embedding models with text
         '''
@@ -152,10 +159,10 @@ class RunKGText(object):
         for e in self.entities:
             word_ids.append([word2id[word] for word in entity2text[e]])
 
-        word_init = [google_vecs[word] if word in google_vecs else None for word in vocab]
+        word_init = [self.google_vecs[word] if word in self.google_vecs else None for word in vocab]
         W_text = [] 
         for e in self.entities:
-            vectors = [google_vecs[word] for word in entity2text[e] if word in google_vecs]
+            vectors = [self.google_vecs[word] for word in entity2text[e] if word in self.google_vecs]
             if len(vectors) == 0:
                 W_text.append(None)
             else:
