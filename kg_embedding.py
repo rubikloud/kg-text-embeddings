@@ -324,12 +324,15 @@ class BaseWordVectorsModel(BaseModel):
         assert len(self.word_ids) == ne
         self.nw = max(max(ids) for ids in self.word_ids if len(ids) > 0) + 1
         self.word_init = word_init 
+        
         if self.word_init is not None:
+            # Make sure embedding dimensionality is the same as that of the word initialization vectors
             text_dim = next(len(x) for x in self.word_init if x is not None)
             if text_dim != self.dim:
                 print("WARNING: Detected dimension %i word initialization vectors. Overriding dimension setting of %i." 
                             %(text_dim, self.dim))
                 self.dim = text_dim 
+                self.R_shape = [self.nr, self.dim]
         
         self.weighted = weighted
         self.pe = pe           
@@ -366,13 +369,14 @@ class BaseWordVectorsModel(BaseModel):
         self._regularize(self.W)
 
         if self.pe:
-            # parameter-efficient weighting scheme 
+            # Parameter-efficient weighting scheme 
             self.P = tf.Variable(np.random.uniform(low=-0.1, high=0.1, size=[self.nr,self.dim]), dtype=tf.float32, name="P")
             weights = tf.matmul(self.P, tf.transpose(self.W))
             self.B = tf.exp(weights)
             self.param_names.append("P")
             self.phase2_vars = [self.P]
         else:
+            # Setting B constant (untrainable) and uniform is equivalent to unweighted word vectors. 
             self.B = tf.Variable(np.ones([self.nr,self.nw]), dtype=tf.float32, trainable=self.weighted, name="B") 
             self.phase2_vars = [self.B]
 
