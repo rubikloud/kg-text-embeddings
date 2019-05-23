@@ -127,15 +127,14 @@ class RunKGText(object):
                 if dataset == "WN":
                     name = name[2:].split("_")[:-2]
                     self.name_vocab = self.name_vocab.union(set(name))
+                elif name == "Unknown":
+                    continue  
                 else:
-                    if name == "Unknown":
-                        name = None 
-                    else:
-                        name = preprocess(name) 
-                        self.name_vocab = self.name_vocab.union(set(name))
+                    name = preprocess(name) 
+                    self.name_vocab = self.name_vocab.union(set(name))
 
                 if dataset == "FB" and desc == "Unknown":
-                    desc = None 
+                    continue
                 else:
                     desc = preprocess(desc)
                     self.desc_vocab = self.desc_vocab.union(set(desc))

@@ -1,1 +1,1 @@
-python run.py $1 $2 --strategy=WWV-desc --weighted --pe 
+python run.py $1 $2 --strategy=WV-desc --weighted --pe 
