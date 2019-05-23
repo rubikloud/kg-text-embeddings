@@ -107,7 +107,9 @@ class RunKGText(object):
         self.entity2name = {}
         self.entity2desc = {} 
         
-        self.google_vecs = gensim.models.KeyedVectors.load_word2vec_format('data/GoogleNews-vectors-negative300.bin', binary=True)
+        # self.google_vecs = gensim.models.KeyedVectors.load_word2vec_format('data/GoogleNews-vectors-negative300.bin', binary=True)
+        with open("data/GoogleNews_vectors.pkl","rb") as f:
+            self.google_vecs = pickle.load(f)
 
         if dataset == "WN":
             fname = os.path.join("data","WN18","descriptions.txt")
