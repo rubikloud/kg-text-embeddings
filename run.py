@@ -11,7 +11,6 @@ import nltk
 import kg_embedding 
 
 
-
 stopwords = set(nltk.corpus.stopwords.words('english'))
 stopwords.add("</s>")
 
@@ -43,7 +42,12 @@ class RunKGText(object):
         print("Loaded:")
         print("\t%i entities" %(len(self.entities)))
         print("\t%i relations" %(len(self.relations)))
-        print("\t%i facts" %(len(self.facts)))
+        num_train = len([1 for s,p,o,d in self.facts if d & (1<<0)])
+        num_valid = len([1 for s,p,o,d in self.facts if d & (1<<1)])
+        num_test = len([1 for s,p,o,d in self.facts if d & (1<<2)])
+        print("\t%i training facts" %(num_train))
+        print("\t%i validation facts" %(num_valid))
+        print("\t%i testing facts" %(num_test))
         
         if self.strategy is not None:
             google_vecs = gensim.models.KeyedVectors.load_word2vec_format('data/GoogleNews-vectors-negative300.bin', binary=True)
@@ -57,8 +61,10 @@ class RunKGText(object):
 
 
     def _load_graph(self, dataset):
+        '''
+        Load entities, relations, and triplets from text files 
+        '''
         print("Loading knowledge graph") 
-        # Load triplets from text files 
         self.facts = [] 
         self.entities = set([])
         self.relations = set([])
@@ -93,8 +99,10 @@ class RunKGText(object):
 
 
     def _load_text(self, dataset):
+        '''
+        LOad names and descriptions for all entities 
+        '''
         print("Loading text data") 
-        # Load text 
         self.name_vocab = set([])
         self.desc_vocab = set([])
         self.entity2name = {}
@@ -157,7 +165,10 @@ class RunKGText(object):
         return word_ids, word_init, W_text 
 
 
-    def run_embedding(self, dim, **kwargs):
+    def run_embedding(self, dim, word_init=False, **kwargs):
+        '''
+        Train the embedding with configuration determined by self.strategy and other arguments. 
+        '''
         print("Training")
         X_train = [(s,p,o) for s,p,o,d in self.facts if d & (1<<0)]
         X_valid = [(s,p,o) for s,p,o,d in self.facts if d & (1<<1)]
@@ -168,13 +179,15 @@ class RunKGText(object):
 
         elif self.strategy == "WV-names":
             cls = eval("kg_embedding."+self.scoref+"WordVectors")
-            self.model = cls(len(self.entities), len(self.relations), dim, negative_sample, self.word_ids_names, 
-                self.word_init_names, **kwargs)
+            word_init_data = self.word_init_names if word_init else None 
+            self.model = cls(len(self.entities), len(self.relations), dim, negative_sample, 
+                self.word_ids_names, word_init_data, **kwargs)
 
         elif self.strategy == "WV-desc":
             cls = eval("kg_embedding."+self.scoref+"WordVectors")
-            self.model = cls(len(self.entities), len(self.relations), dim, negative_sample, self.word_ids_desc, 
-                self.word_init_desc, **kwargs)
+            word_init_data = self.word_init_desc if word_init else None 
+            self.model = cls(len(self.entities), len(self.relations), dim, negative_sample, 
+                self.word_ids_desc, word_init_data, **kwargs)
 
         else:
             cls = eval("kg_embedding."+self.scoref)
@@ -218,6 +231,9 @@ class RunKGText(object):
 
 
     def evaluate(self, n_jobs=2):
+        '''
+        Compute the mean rank and hits@10 for missing link prediction. 
+        '''
         print("Evaluating")
         X_test = [(s,p,o) for s,p,o,d in self.facts if d & (1<<2)]
         ranks = []
@@ -245,7 +261,6 @@ class RunKGText(object):
 
 
 
-
 def init(parser):
     parser.add_argument("dataset", help="WN or FB")
     parser.add_argument("scoref", help="Name of scoring function for embedding model. Must be one of" \
@@ -269,8 +284,8 @@ if __name__ == "__main__":
 
     runner = RunKGText(args.dataset, args.scoref, args.strategy)
 
-    runner.run_embedding(dim=args.dim, weighted=args.weighted, word_init=args.word_init, pe=args.pe, tfidf_weights=args.tfidf, 
-        epochs=args.epochs, batch_size=args.batch_size, margin=args.margin)
+    runner.run_embedding(dim=args.dim, weighted=args.weighted, word_init=args.word_init, pe=args.pe, 
+    tfidf_weights=args.tfidf, epochs=args.epochs, batch_size=args.batch_size, margin=args.margin)
 
     runner.evaluate(n_jobs=args.n_jobs)
 
