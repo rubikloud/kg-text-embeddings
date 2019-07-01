@@ -1,3 +1,4 @@
+
 # Knowledge Graph Embeddings using Textual Associations
 This repository contains code and data for the experiments in the paper:
 
@@ -27,3 +28,5 @@ For example, to run the FeatureSum model on Wordnet using the DistMult scoring f
 ```
 ./run_FeatureSum.sh WN DistMult 
 ```
+### Trained Embeddings
+Word embedding vectors learned by the WeightedWordVectors model for Wordnet and Freebase can be found in the trained_embeddings directory. Each file is a pickled dict mapping words (strings) to 100-dimensional numpy arrays. 
