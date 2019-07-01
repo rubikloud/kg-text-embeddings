@@ -233,7 +233,7 @@ class RunKGText(object):
             t = time.time() - start 
             cnt += 1
             if cnt%10 == 0:
-                print("Progress: %i/%i (%.1f)              " %(cnt,tot,t), end='\r')
+                print("Progress: %i/%i (%.1f s)              " %(cnt,tot,t), end='\r')
         
         shared_results[save_idx : save_idx+len(results)] = np.array(results) 
 

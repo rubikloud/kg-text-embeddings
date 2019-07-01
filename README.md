@@ -1,7 +1,7 @@
 # Knowledge Graph Embeddings using Textual Associations
 This repository contains code and data for the experiments in the paper:
 
-[Unsupervised Embedding Enhancements of Knowledge Graphs using Textual Associations]()\
+[Unsupervised Embedding Enhancements of Knowledge Graphs using Textual Associations](http://www.eecg.utoronto.ca/~veneris/ijcai19.pdf)\
 by Neil Veira, Brian Keng, Kanchana Padmanabhan, Andreas Veneris\
 Published at IJCAI 2019.
 
